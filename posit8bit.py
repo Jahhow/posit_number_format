@@ -16,6 +16,7 @@ ebit = 1 # es, number of exp bits
 useed = 2**2**ebit
 minFloat = useed**-4
 maxFloat = useed** 4
+halfMinFloat = minFloat/2
 
 useedP_2 = useed**-2
 useedP_1 = useed**-1
@@ -28,22 +29,22 @@ def posit_number_func(float_number):
     '''
     
     float_abs = abs(float_number)
-    if float_abs <= minFloat:
+    if float_abs <= halfMinFloat:
         return 0
-    if float_abs >= maxFloat:
-        if float_number < 0:
-            return -maxFloat
-        return maxFloat
-
-    # Get the number of fraction bits
-    if useedP_1 <= float_abs < useedP1:
-        num_fraction_bits = posit_bit - 1 - 2 - ebit
-    elif useedP_2 <= float_abs < useedP2:
-        num_fraction_bits = posit_bit - 1 - 3 - ebit
+    if float_abs <= minFloat:
+        posit_float = minFloat
+    elif float_abs >= maxFloat:
+        posit_float = maxFloat
     else:
-        num_fraction_bits = posit_bit - 1 - 4 - ebit
+        # Get the number of fraction bits
+        if useedP_1 <= float_abs < useedP1:
+            num_fraction_bits = posit_bit - 1 - 2 - ebit
+        elif useedP_2 <= float_abs < useedP2:
+            num_fraction_bits = posit_bit - 1 - 3 - ebit
+        else:
+            num_fraction_bits = posit_bit - 1 - 4 - ebit
 
-    posit_float = limit_num_fraction_bits(float_abs, num_fraction_bits)
+        posit_float = limit_num_fraction_bits(float_abs, num_fraction_bits)
 
     if float_number < 0:
         posit_float = -posit_float
