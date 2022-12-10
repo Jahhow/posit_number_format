@@ -23,7 +23,7 @@ useedP1  = useed** 1
 useedP2  = useed** 2
 def posit_number_func(float_number):
     '''
-    Original authored by Pola.
+    Originally written by Pola.
     Modified by Jahhow on 2022/12/10
     '''
     
