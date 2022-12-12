@@ -3,10 +3,13 @@ import numpy as np
 
 def tf_limit_num_fraction_bits(fr,exp,num_fraction_bits):
     '''
-    限制 fraction bits 數量
+    float_abs: The absolute value of the original number
+    num_fraction_bits: Number of fraction bits
+    
     - Jahhow 2022.12.10
     '''
     num_fraction_bits+=1
+    # fr,exp = frexp(float_abs)
     fr = tf.floor(fr*2**num_fraction_bits + .5)
     return fr * 2**(exp-num_fraction_bits)
 
@@ -21,10 +24,9 @@ useedP_2 = useed**-2
 useedP_1 = useed**-1
 useedP1  = useed** 1
 useedP2  = useed** 2
-# @tf.function # Tested on dip3 GPU, this might not be necessary. For 100000000 array, 0.42s -> 0.40s .
+# @tf.function
 def tf_posit_number_func(float_number,fr,exp):
     '''
-    Vectorized (向量化加速) 8-bit posit function
     Originally written by Jahhow on 2022/12/12
     '''
 
@@ -39,47 +41,35 @@ def tf_posit_number_func(float_number,fr,exp):
 
     return posit_float
 
-def tf_posit_8bit(tensor):
-    '''
-    Returns a tensor formatted by 8bit posit.
-    '''
-    fr,exp = np.frexp(tensor)
+# @tf.function # Tested on dip3, this is not needed.
+def tf_posit(a):
+    fr,exp = np.frexp(a)
     exp=exp.astype(np.float32)
-    tensor=tf_posit_number_func(tensor,fr,exp)
-    return tensor
+    a=tf_posit_number_func(a,fr,exp)
+    return a
 
 if __name__ == '__main__':
     def verify():
+        a=tf.random.uniform([7])
+        b=tf_posit(a)
         from posit8bit import posit_number_func
-
-        nTestCase = 1000
-        inputTensor=tf.random.uniform([nTestCase])
-        b=tf_posit_8bit(inputTensor)
-        c=tf.map_fn(posit_number_func, inputTensor)
-        # print(f'Input: {inputTensor}')
-        # print(f'tf_posit:         {b}')
-        # print(f'posit_number_func {c}')
-        allCorrect = tf.reduce_all(c==b).numpy()
-        if allCorrect:
-            print(f'All {nTestCase} test cases are correct.')
-        else:
-            print('ERROR!!!!')
-    verify()
+        c=tf.map_fn(posit_number_func, a)
+        print(a)
+        print(b)
+        print(c)
+        print(tf.reduce_all(c==b))
     def main():
         from time import time
         # from float_posit16bit_1 import pola_posit_number_func
-        nTestCase = 100000000
-        a=tf.random.uniform([nTestCase])
+        a=tf.random.uniform([100000000])
         # a=tf.random.uniform([2,2])
         start_time=time()
-        # while True:
-        for _ in range(10):
-            b=tf_posit_8bit(a)
+        while True:
+            b=tf_posit(a)
             end_time = time()
             duration = end_time - start_time
             start_time = end_time
-            print(f'\r{nTestCase} numbers took {duration:6.4f} sec',end='',flush=True)
-        print()
+            print(f'{duration:10.3f}')
     main()
     '''if(float_abs < 2**(-used*4)):
         return 0
